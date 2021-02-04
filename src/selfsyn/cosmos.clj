@@ -1,4 +1,4 @@
-(ns selfsynth.cosmos
+(ns selfsyn.cosmos
     (:use [overtone.live]
           [mud.core]
           [selfsyn.synth :refer [voz-buffer]]
@@ -13,45 +13,53 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; COSMOS M A G I C ;;
 ;;;;;;;;;;;;;;;;;;;;;;
-
+(comment
+  (def beats (buffer->tap :beat-buf kick-seq)) ;check
+  {:user-data { "iBeat" (atom
+                         {:synth beats :tap "beat"})}})
 (comment
     (stop)
     (fadeout-master)
-    (def beats (buffer->tap :beat-buf kick-seq))
 
+    (repl-player (find-sample "play" 11) :rate -1.0)
 
-    (tone/start-fullscreen "resources/shaders/field.glsl"
-                           :textures [:overtone-audio :previous-frame]
-                           :user-data { "iBeat" (atom {:synth beats :tap "beat"})})
-    (tone/stop)
+    (t/start-fullscreen "resources/shaders/field.glsl"
+                        :textures [:overtone-audio :previous-frame
+                                   "resources/images/tex16.png"
+                                   "resources/images/tex09.jpg"
+                                   ])
+
+    (t/stop)
     )
 
-(defonce note-buf (buffer 256))
-(pattern! note-buf (map note [:C#4 :E3 0 0  :B3 :D4  0 :D4  :A4 :C#4, 0, :c#4]))
-(pattern! note-buf
+(stop)
+(do
+  (defonce note-buf (buffer 256))
+  (pattern! note-buf (map note [:C#4 :E3 0 0  :B3 :D4  0 :D4  :A4 :C#4, 0, :c#4]))
+  (pattern! note-buf
             (repeat 8 (degrees-seq [:f#3 5 7 _ _]))
             (repeat 8 (degrees-seq [:f#3 4 6 _ 6]))
             (repeat 8 (degrees-seq [:f#3 3 5 _ 5]))
             (repeat 8 (degrees-seq [:f#3 2 3 _ 7]))
             (repeat 8 (degrees-seq [:f#3 1 3 _ 5]))
-            (repeat 8 (degrees-seq [:f#3 1 3 6 5])))
-
-(defonce bass-buf (buffer 256))
+            (repeat 8 (degrees-seq [:f#3 1 3 6 5]))))
+(do
+  (defonce bass-buf (buffer 256))
   (pattern! bass-buf
             (repeat 8 (degrees-seq [:f#1 1 _ ]))
             (repeat 8 (degrees-seq [:f#1 6 _ ]))
             (repeat 8 (degrees-seq [:f#1 5 _ ]))
             (repeat 8 (degrees-seq [:f#1 5 _ ]))
             (repeat 8 (degrees-seq [:f#1 3 _ ]))
-            (repeat 8 (degrees-seq [:f#1 5 _ ])))
+            (repeat 8 (degrees-seq [:f#1 5 _ ]))))
 
 (ctl-global-clock 10.0)
 
 (def pluk  (plucked :note-buf note-buf :beat-bus (:count time/beat-2th) :beat-trg-bus (:beat time/beat-4th) :amp 0.01 ))
-(ctl pluk  :attack 0.1   :sustain 0.3   :release 0.1 :volume 0.2 :amp 0.01)
+(ctl pluk  :attack 0.1   :sustain 0.3   :release 0.1 :volume 0.2 :amp 0.05)
 
 (def pluk2 (bass :note-buf note-buf :beat-bus (:count time/beat-4th) :beat-trg-bus (:beat time/beat-4th)))
-(ctl pluk2 :attack 0.25 :sustain 1.   :release 0.5 :amp 0.01 :volume 0.2)
+(ctl pluk2 :attack 0.25 :sustain 1.   :release 0.5 :amp 0.1 :volume 0.2)
 
 (kill pluk pluk2)
 
@@ -64,7 +72,7 @@
             )
 
 (ctl-global-clock 4.0)
-
+(stop)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; D R U M E F F E C T S ;;
@@ -85,7 +93,7 @@
 (pattern! effects2-seq-buf (repeat 14 [0 0 1 0 0 1 0 1 0]))
 
 (def snare-organ-seq1 (efficient-seqer [:head drum-effects-g] :buf kick-sample :pattern effects-seq-buf :rate-start 1.0 :rate-limit 1.0 :amp 1.))
-(ctl snare-organ-seq1 :rate-start .2)
+(ctl snare-organ-seq1 :rate-start 0.2)
 
 (def snare-organ-seq2 (efficient-seqer [:head drum-effects-g] :buf kick-sample :pattern effects2-seq-buf :rate-start 1. :rate-limit 0.8 :amp 0.2))
 (ctl snare-organ-seq2 :amp 0.85)
@@ -132,48 +140,43 @@
 
 (remove-all-beat-triggers)
 
+(do
 
-(defonce godzilla-s  (freesound-sample 206078))
-(defonce click-s    (freesound-sample 406))
-(defonce shaker-s  (freesound-sample 100008))
-(defonce cha-s (freesound 228641))
-(defonce icq-s (freesound 556334))
+  (defonce godzilla-s  (freesound-sample 206078))
+  (defonce click-s    (freesound-sample 406))
+  (defonce shaker-s  (freesound-sample 100008))
+  (defonce cha-s (freesound 228641))
+  (defonce play-s (load-sample "resources/samples/play.wav"))
+  (defonce bob-s (load-sample "resources/samples/bob.wav"))
+  (defonce trololo-s (load-sample "resources/samples/trololo.wav"))
+  (defonce carl-s (load-sample "resources/samples/carl.wav"))
+  (defonce eight-s (freesound 392465))
+  (defonce acidon-s (freesound 20521))
+  (defonce space-s (freesound 396625))
+  (defonce button-s (freesound 492398))
+  (defonce hat-s (freesound-sample 73566))
+  (defonce icq-s (freesound 556334)))
+
 (on-beat-trigger 128 #(do (icq-s)))
 
-(defonce play-s (load-sample "resources/samples/play.wav"))
-(defonce bob-s (load-sample "resources/samples/bob.wav"))
-(defonce trololo-s (load-sample "resources/samples/trololo.wav"))
-(defonce carl-s (load-sample "resources/samples/carl.wav"))
+(on-beat-trigger 128 #(do (button-s)))
 
 
-(defonce button-s (freesound 492398))
-(on-beat-trigger 128 #(do (icq-s)))
 
-(defonce eight-s (freesound 392465))
-
-(defonce acidon-s (freesound 20521))
-(defonce space-s (freesound 396625))
-
-
-(defonce hat-seq (buffer 256))
-(defonce hat-s (freesound-sample 73566))
-
-(def hats (doall (map #(seqer :beat-num %1 :pattern hat-seq :num-steps 8 :amp 0.3 :buf hat-s :rate-start 0.9) (range 0 8))))
-
-(pattern! hat-seq
+(defonce hs (buffer 256))
+(def hats (doall (map #(seqer :beat-num %1 :pattern hs :num-steps 8 :amp 0.3 :buf hat-s :rate-start 0.9) (range 0 8))))
+(pattern! hs
           [1 1 0 0 0 1 0 0]
           [1 0 0 0 0 1 0 0]
           [1 0 0 0 0 1 0 0])
 
 
-
-
-
-
-
-
-
-
+(defonce ambs (buffer 256))
+(def hats (doall (map #(seqer :beat-num %1 :pattern hs :num-steps 8 :amp 0.3 :buf space-s :rate-start 0.9) (range 0 8))))
+(pattern! ambs
+          [1 1 0 0 0 1 0 0]
+          [1 0 0 0 0 1 0 0]
+          [1 0 0 0 0 1 0 0])
 
 
 
@@ -244,7 +247,6 @@
 (def score   (map note [:F5 :G5 :G5 :G5 :G5 :BB5 :BB5 :D#5]))
 
 (buffer-write! saw-bf2 (repeat 256 (midi->hz (note :A3))))
-
 (buffer-write! saw-bf2 (map midi->hz
                             (map (fn [midi-note] (+ -12 midi-note))
                                  (map note (take 256 (cycle score))))))
@@ -272,13 +274,12 @@
 
 
 (use 'selfsyn.cosmoshelper)
-
 (def reich-degrees [:vi :vii :i+ :_ :vii :_ :i+ :vii :vi :_ :vii :_])
 (def pitches (degrees->pitches reich-degrees :diatonic :C4))
+;;FIXME <---------------------------
 
-(take 10 pitches)
 
-(cycle pitches)
+
 
 (defonce mystical-aura-s (freesound-sample 166185))
 (def m (mystical-aura-s))

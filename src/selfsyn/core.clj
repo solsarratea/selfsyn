@@ -1,9 +1,5 @@
 (ns selfsyn.core
-  (:use [selfsyn.chow]
-        [selfsyn.audio]
-        [selfsyn.synth]
-        [selfsyn.sched]
-        [overtone.live])
+  (:use [overtone.live])
   (:require [shadertone.tone :as t]))
 
 (defn disconnect
@@ -44,8 +40,6 @@
            :title "mar"
            :width 1600 :height 900
            :textures [:overtone-audio :previous-frame]))
-
-(ray)
 
 (defn vvv
   []
