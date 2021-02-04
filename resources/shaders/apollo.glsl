@@ -105,39 +105,35 @@ vec2 tunnel (vec3 p)
     return vec2(s, MAT_TUN);
 }
 
-vec2 prim2 (vec3 p)
+float apollonian( vec3 p, float s )
 {
-    p.z += cos(p.x + iTime);
-    p.x += sin(p.y+iTime*2.);
-    p.y -= sin(p.z*2.+iTime*3.);
-    return vec2(sphe(p,5.), MAT_SPHE);
+	float scale = 1.0;
+
+	vec4 orb = vec4(1000.0);
+
+	for( int i=0; i<8;i++ )
+	{
+		p = -1.0 + 2.*fract(0.5*p+0.5);
+
+		float r2 = dot(p,p);
+
+        orb = min( orb, vec4(abs(p),r2) );
+
+		float k = s/r2;
+		p     *= k;
+		scale *= k;
+	}
+
+	return 0.3*abs(p.y)/scale;
 }
+
 vec3 opRep(vec3 p, vec3 c) {	return mod(p, c) - 0.5 * c; }
 
 
-float g = 0.;
-
-vec2 scene2(vec3 p)
-{
-    vec2 d = mat_min(tunnel(p), prim2(p));
-     // glow from lsdlive, originally from balkhan : https://www.shadertoy.com/view/4t2yW1
-    g += 0.01/(0.01+d.x*d.x);
-    return d;
-}
-
 float scene(vec3 pos){
   vec3 p = pos;
- // p = opRep(p,vec3(0.,0.,0));
-  for (int i = 0; i<1; i++){
-    p.xy = mo(p.xy, vec2(20.,3.));
-   // reflection(p.zy, time*0.2);
-    //p.xz = moda(p.xz, 2.*PI/2.+sin(time));
-    //p.x -= 5.;
-  //  p.xz *= rot(p.y*0.8);
-  }
-  float b = cyl(p.xz,2.)-sin(time+pos.x)*cos(time+pos.y);
 
-  return b;
+   return apollonian(pos,1.8);
 }
 
 vec3 estimateNormal(vec3 p) {
@@ -173,7 +169,7 @@ vec3 transparent (vec3 rayOrigin, vec3 camOrigin){
 
 float trace (vec3 ro, vec3 co){
     float tD = 0.;
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 100; i++) {
         float dist = scene(tD*ro+ co);
         tD += dist;
         if (dist < 0.001){break;}
@@ -189,15 +185,15 @@ vec3 luz(vec3 po, vec3 co){
 
     vec3 l = normalize(fuenteDeLuz - po);
     float dif = clamp(dot(l, normal),0.,1.);
-    vec3 colorDif = (bb.rgb*textu.rgb+hsv2rgb(po)*0.01)*dif;
+    vec3 colorDif = (palette(normal.x+5)+0.*hsv2rgb(po*0.3)*0.01)*dif;
 
     vec3 lReflejada =normalize(reflect(-l,normal));
     vec3 camDir = normalize(co - po);
-    float specular = pow(clamp(dot(lReflejada, camDir),0.,1.),200.2*iOvertoneVolume);
+    float specular = pow(clamp(dot(lReflejada, camDir),0.,1.),200.2);//iOvertoneVolume);
     specular = min(specular,dif);
-    vec3 colorSpec = noise.rgr*vec3(0.85)*specular;
+    vec3 colorSpec = noise.rgb*vec3(0.2)*specular;
 
-    vec3 colorAmb = palette(length(po)+time)*0.05;
+    vec3 colorAmb = palette(length(noise.rgb)+time)*0.01;
 
 
     return  colorDif + colorAmb.rgb + colorSpec;
@@ -209,14 +205,28 @@ float quadL (vec2 pos, float a){return (a-max(abs(pos.x),abs(pos.y)));}
 void main(void)
 {  vec4 color;
    vec2 uv = vec2(gl_FragCoord.xy / iResolution.xy) * 2.0 -1.; uv /= vec2(iResolution.y / iResolution.x, 1);
-
+   //uv *= 0.;
    float sound = iOvertoneVolume;
 
-  float lens = 1;
-  //lens=quadL(uv,iOvertoneVolume);
+   float lens = 1.;
+  // lens=quadL(uv,(1.+beat(128.,.5,1.)));
   vec3 pos = vec3(uv,lens);
+  vec3 p =pos;
 
-  vec3 ro = normalize(pos); vec3 co = vec3(0., 0.,-10.);
+  pos.xy *=rot(sin(time*0.03),cos(time*0.02));
+  pos.zx *=rot(-cos(0.3),sin(time*.02));
+
+  //  vec3 ro = normalize(pos);
+  //vec3 co = vec3(0., 0.,-10.);
+   vec3 ro = vec3( 2.8*cos(0.1+.33), 0.4 + 0.30, 2.8 );
+   vec3 ta = vec3( 1.9*cos(1.2+.41), 0.4 + 0.10, 1.9 );
+   float roll = 0.2*cos(0.01);
+   vec3 cw = normalize(ta-ro);
+   vec3 cp = vec3(sin(roll), cos(roll),0.0);
+   vec3 cu = normalize(cross(cw,cp));
+   vec3 cv = normalize(cross(cu,cw));
+p = pos;
+   vec3 co = normalize( p.x*cu + p.y*cv + 2.8*cw);
 
 
 
@@ -227,10 +237,10 @@ void main(void)
         if (dist < 0.001){break;}
     }
     if (tD < 80){
-      color.rgb = luz(tD*ro+co,co).rgb * beat(128.,2.5,1);
+      color.rgb = luz(tD*ro+co,co).rgb;// * beat(128.,2.5,1);
     }
 
-  //color.rgb *=  transparent(ro,co).r;
+  //color.r -=  transparent(ro,co).r;
 
   gammaC(color.rgb, 1.2);
 
