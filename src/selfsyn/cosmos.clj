@@ -23,7 +23,8 @@
 
     (repl-player (find-sample "play" 11) :rate -1.0)
 
-    (t/start-fullscreen "resources/shaders/field.glsl"
+    (t/start "resources/shaders/apollo.glsl"
+                          :width 1600 :height 1000
                         :textures [:overtone-audio :previous-frame
                                    "resources/images/tex16.png"
                                    "resources/images/tex09.jpg"
@@ -53,10 +54,15 @@
             (repeat 8 (degrees-seq [:f#1 3 _ ]))
             (repeat 8 (degrees-seq [:f#1 5 _ ]))))
 
-(ctl-global-clock 10.0)
+(ctl-global-clock 4.0)
+(volume 0.8)
+
+(kill pluk 1)
 
 (def pluk  (plucked :note-buf note-buf :beat-bus (:count time/beat-2th) :beat-trg-bus (:beat time/beat-4th) :amp 0.01 ))
 (ctl pluk  :attack 0.1   :sustain 0.3   :release 0.1 :volume 0.2 :amp 0.05)
+
+(ctl pluk2 :rate 0.9)
 
 (def pluk2 (bass :note-buf note-buf :beat-bus (:count time/beat-4th) :beat-trg-bus (:beat time/beat-4th)))
 (ctl pluk2 :attack 0.25 :sustain 1.   :release 0.5 :amp 0.1 :volume 0.2)
@@ -73,7 +79,7 @@
 
 (ctl-global-clock 4.0)
 (stop)
-
+(volume 0.6)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; D R U M E F F E C T S ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -116,15 +122,15 @@
 
 (def snare-organ-seq4 (efficient-seqer [:head drum-effects-g] :buf snare-sample :pattern effects4-seq-buf :rate-start 0.95 :rate-limit 0.8 :amp 1.))
 
-(ctl snare-organ-seq4 :amp 0.9)
+(ctl snare-organ-seq4 :amp 0.2)
 
-;(ctl drum-effects-g :amp 1.0)
+(ctl drum-effects-g :amp 1.0)
 
 
 (def v1 ((voz-buffer
-            "yo soy verdadero, pero mi verdad transciende este universo"
+            "solquemal, , ,"
           ) :rate 0.95 :loop? true :out-bus 0))
-(ctl v1 :rate 1.4 :amp 0.1 :note 2)
+(ctl v1 :rate 0.4 :amp 0.3 :note 2)
 
 (def v2 ((voz-buffer
           "yo no soy verdadero, pero mi verdad transciende este universo"
@@ -136,7 +142,7 @@
           ) :rate 0.95 :loop? true :out-bus 0))
 (ctl v3 :rate 1.2 :amp 0.1 :note 2)
 
-(kill v1)
+(kill v2)
 
 (remove-all-beat-triggers)
 
@@ -161,19 +167,31 @@
 
 (on-beat-trigger 128 #(do (button-s)))
 
+(shaker-s)
 
+(overtone.live/volume 0.5)
 
 (defonce hs (buffer 256))
-(def hats (doall (map #(seqer :beat-num %1 :pattern hs :num-steps 8 :amp 0.3 :buf hat-s :rate-start 0.9) (range 0 8))))
+(def acid (doall (map #(seqer :beat-num %1 :pattern hs :num-steps 8 :amp 0.3 :buf acidon-s :rate-start 0.9) (range 0 8))))
+
+(def acid2 (doall (map #(seqer :beat-num %1 :pattern hs :num-steps 8 :amp 0.3 :buf shaker-s :rate-start 0.9) (range 0 8))))
+
+
+
+(ctl acid :buf godzilla-s :amp 1.7)
+
+(godzilla-s)
+
+(kill hats)
+
+(stop)
+
 (pattern! hs
-          [1 1 0 0 0 1 0 0]
-          [1 0 0 0 0 1 0 0]
-          [1 0 0 0 0 1 0 0])
+          [1 1 0 0 0 0 0 0 0 0 0 0]
+          [0 0 0 0 1 0 0 0 0 0 0 0]
+          [0 0 0 0 0 0 0 0 1 0 0 0])
 
-
-(defonce ambs (buffer 256))
-(def hats (doall (map #(seqer :beat-num %1 :pattern hs :num-steps 8 :amp 0.3 :buf space-s :rate-start 0.9) (range 0 8))))
-(pattern! ambs
+(pattern! hs
           [1 1 0 0 0 1 0 0]
           [1 0 0 0 0 1 0 0]
           [1 0 0 0 0 1 0 0])
@@ -266,7 +284,7 @@
 (kill buffered-plain-space-organ)
 
 (stop)
-
+(t/stop)
 
 
 (overtone.live/volume 0.03)

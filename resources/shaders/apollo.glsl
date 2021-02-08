@@ -107,14 +107,15 @@ vec2 tunnel (vec3 p)
 
 float apollonian( vec3 p, float s )
 {
-	float scale = 1.0;
+	float scale = 2.5;
 
-	vec4 orb = vec4(1000.0);
+	vec4 orb = vec4(10.0);
 
-	for( int i=0; i<8;i++ )
+	for( int i=0; i<10;i++ )
 	{
 		p = -1.0 + 2.*fract(0.5*p+0.5);
-
+               // p.y += .3;
+               // p.x += .2;
 		float r2 = dot(p,p);
 
         orb = min( orb, vec4(abs(p),r2) );
@@ -124,7 +125,7 @@ float apollonian( vec3 p, float s )
 		scale *= k;
 	}
 
-	return 0.3*abs(p.y)/scale;
+	return 0.*abs(p.y)/scale ;
 }
 
 vec3 opRep(vec3 p, vec3 c) {	return mod(p, c) - 0.5 * c; }
@@ -132,8 +133,8 @@ vec3 opRep(vec3 p, vec3 c) {	return mod(p, c) - 0.5 * c; }
 
 float scene(vec3 pos){
   vec3 p = pos;
-
-   return apollonian(pos,1.8);
+  p.xz *=rot(-time*0.01);
+   return apollonian(pos,1.2);
 }
 
 vec3 estimateNormal(vec3 p) {
@@ -172,7 +173,7 @@ float trace (vec3 ro, vec3 co){
     for (int i = 0; i < 100; i++) {
         float dist = scene(tD*ro+ co);
         tD += dist;
-        if (dist < 0.001){break;}
+        if (dist < 0.01){break;}
         if(tD > 80.){return 0.;}
 
     }
@@ -180,24 +181,24 @@ float trace (vec3 ro, vec3 co){
     return tD;
 }
 vec3 luz(vec3 po, vec3 co){
-    vec3 fuenteDeLuz = vec3(10.,20.,-10.); vec3 normal = estimateNormal(po);
+    vec3 fuenteDeLuz = vec3(10.,-10.,-1.); vec3 normal = estimateNormal(po);
 
 
     vec3 l = normalize(fuenteDeLuz - po);
     float dif = clamp(dot(l, normal),0.,1.);
-    vec3 colorDif = (palette(normal.x+5)+0.*hsv2rgb(po*0.3)*0.01)*dif;
-
+    vec3 colorDif = (palette(normal.z+1*iOvertoneVolume)*hsv2rgb(po*0.3)*0.01)*dif;
+   //colorDif += sin(vec3(.5,0.,0.1)*po*iOvertoneVolume*1.
+                //   ).grb;// + bb.xyz*dif;
     vec3 lReflejada =normalize(reflect(-l,normal));
     vec3 camDir = normalize(co - po);
-    float specular = pow(clamp(dot(lReflejada, camDir),0.,1.),200.2);//iOvertoneVolume);
+    float specular = pow(clamp(dot(lReflejada, camDir),0.,1.),20.2);//*iOvertoneVolume;
     specular = min(specular,dif);
-    vec3 colorSpec = noise.rgb*vec3(0.2)*specular;
+    vec3 colorSpec = normal*vec3(0.8)*specular;
 
-    vec3 colorAmb = palette(length(noise.rgb)+time)*0.01;
+    vec3 colorAmb = po*iOvertoneVolume;
 
 
-    return  colorDif + colorAmb.rgb + colorSpec;
-}
+    return  colorDif + colorAmb.rgb + colorSpec;}
 
 float fishL (vec2 pos,float a) {return (a-dot(pos.xy, pos.xy)*.5)*.5;}
 float quadL (vec2 pos, float a){return (a-max(abs(pos.x),abs(pos.y)));}
@@ -205,33 +206,32 @@ float quadL (vec2 pos, float a){return (a-max(abs(pos.x),abs(pos.y)));}
 void main(void)
 {  vec4 color;
    vec2 uv = vec2(gl_FragCoord.xy / iResolution.xy) * 2.0 -1.; uv /= vec2(iResolution.y / iResolution.x, 1);
-   //uv *= 0.;
+  // uv *= (1.+iOvertoneVolume);
    float sound = iOvertoneVolume;
 
    float lens = 1.;
-  // lens=quadL(uv,(1.+beat(128.,.5,1.)));
+ // lens=fishL(uv,1.6);
   vec3 pos = vec3(uv,lens);
   vec3 p =pos;
 
-  pos.xy *=rot(sin(time*0.03),cos(time*0.02));
-  pos.zx *=rot(-cos(0.3),sin(time*.02));
+ //pos.xy *=rot(sin(time*0.03),cos(time*0.2))*3.;
+ //pos.zx *=rot(-cos(0.003),sin(time*.02));
 
-  //  vec3 ro = normalize(pos);
-  //vec3 co = vec3(0., 0.,-10.);
-   vec3 ro = vec3( 2.8*cos(0.1+.33), 0.4 + 0.30, 2.8 );
-   vec3 ta = vec3( 1.9*cos(1.2+.41), 0.4 + 0.10, 1.9 );
-   float roll = 0.2*cos(0.01);
+    vec3 ro = normalize(pos);
+    vec3 ta = vec3(0., sin(time*0.2)*20.,-10+time*0.00002);
+   //vec3 ro = vec3( 2.8*cos(0.1+.33), 0.4 + 0.30, 2.8 );
+  // vec3 ta = vec3( 1.9*cos(1.2+.41), 0.4 + 0.10, 1.9 );
+   float roll = sin(0.1);
    vec3 cw = normalize(ta-ro);
-   vec3 cp = vec3(sin(roll), cos(roll),0.0);
+   vec3 cp = vec3(sin(roll), cos(roll),1.);
    vec3 cu = normalize(cross(cw,cp));
    vec3 cv = normalize(cross(cu,cw));
 p = pos;
-   vec3 co = normalize( p.x*cu + p.y*cv + 2.8*cw);
-
+   vec3 co = normalize( p.x*cu + p.y*cv +6*cw);
 
 
  float tD = 0.;
-    for (int i = 0; i < 80; i++) {
+    for (int i = 0; i < 100; i++) {
         float dist = scene(tD*ro+ co);
         tD += dist;
         if (dist < 0.001){break;}
@@ -240,9 +240,9 @@ p = pos;
       color.rgb = luz(tD*ro+co,co).rgb;// * beat(128.,2.5,1);
     }
 
-  //color.r -=  transparent(ro,co).r;
+  //color.rgb  *=  transparent(ro,co);
 
-  gammaC(color.rgb, 1.2);
+  gammaC(color.rgb, (1.+5.*iOvertoneVolume));
 
   gl_FragColor = color;
 }
