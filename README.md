@@ -15,9 +15,12 @@ check java version: I had to target different version: OpenJDK Runtime Environme
 - From emacs environment run `cider-connect`. Default configruation is set to localhost and port `47480`
 
 **cosmos** DEMO:
+
+
+
 ![](resources/assets/output.gif)
 
 
-Special thanks to [markus-wa](https://github.com/markus-wa)
+Special thanks to [Markus](https://github.com/markus-wa)
 
 
