@@ -5,9 +5,10 @@
 ![](resources/assets/selfsyn.png)
 
 Uses:
--[emacs live](https://overtone.github.io/emacs-live/)
--[overtone](https://github.com/markus-wa/overtone)
--[shadertone](https://github.com/markus-wa/shadertone)
+- [emacs live](https://overtone.github.io/emacs-live/)
+- [overtone](https://github.com/markus-wa/overtone)
+- [shadertone](https://github.com/markus-wa/shadertone)
+
 
 For building locally:
 - Run `lein repl`
